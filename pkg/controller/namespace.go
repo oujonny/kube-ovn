@@ -106,14 +106,6 @@ func (c *Controller) handleAddNamespace(key string) error {
 
 	// check if subnet bind ns
 	for _, s := range subnets {
-		for _, ns := range s.Spec.Namespaces {
-			if ns == key {
-				lss = append(lss, s.Name)
-				cidrs = append(cidrs, s.Spec.CIDRBlock)
-				excludeIps = append(excludeIps, strings.Join(s.Spec.ExcludeIps, ","))
-				break
-			}
-		}
 		// check if subnet is in custom vpc with configured defaultSubnet, then annotate the namespace with this subnet
 		if s.Spec.Vpc != "" && s.Spec.Vpc != c.config.ClusterRouter {
 			vpc, err := c.vpcsLister.Get(s.Spec.Vpc)
@@ -123,6 +115,17 @@ func (c *Controller) handleAddNamespace(key string) error {
 			}
 			if s.Name == vpc.Spec.DefaultSubnet {
 				lss = []string{s.Name}
+				cidrs = []string{s.Spec.CIDRBlock}
+				excludeIps = []string{strings.Join(s.Spec.ExcludeIps, ",")}
+				break
+			}
+		}
+		for _, ns := range s.Spec.Namespaces {
+			if ns == key {
+				lss = append(lss, s.Name)
+				cidrs = append(cidrs, s.Spec.CIDRBlock)
+				excludeIps = append(excludeIps, strings.Join(s.Spec.ExcludeIps, ","))
+				break
 			}
 		}
 	}
